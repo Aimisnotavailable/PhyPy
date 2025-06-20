@@ -1,17 +1,17 @@
 import pygame
+
 from scripts.physicsobj import PhysicsObj
-from scripts.gravity import  Gravity
-from scripts.bounce import Bounce
+from scripts.forces import Force
 
 class Ball(PhysicsObj):
     
-    def __init__(self, pos : list[float], size : list[int], terminal_velocities : list[float], g_force : float, damping_force : float) -> None:
+    def __init__(self, pos : list[float], size : list[int], terminal_velocities : list[float], forces : dict[str, Force]) -> None:
         super().__init__(terminal_velocities)
         self.pos = pos
         self.size = size
 
-        self.forces['gravity'] = Gravity(g_force)
-        self.forces['bounce'] = Bounce(damping_force=damping_force)
+        for force, force_obj in forces.items():
+            self.forces[force] = force_obj
     
     def rect(self) -> pygame.Rect:
         return pygame.Rect(*self.pos, *self.size)
@@ -19,6 +19,7 @@ class Ball(PhysicsObj):
     def update(self, args : set[str]=set()) -> None:
 
         for force in self.forces.keys():
+
             self.forces[force].apply_force(self, args)
         
         if self.velocities[0] >= 0:
@@ -31,6 +32,10 @@ class Ball(PhysicsObj):
         else:
             self.velocities[1] = max(-self.terminal_velocities[1], self.velocities[1])
 
+        if self.velocities[0] >= 0:
+            self.velocities[0] = max(0, self.velocities[0] - 0.1)
+        else:
+            self.velocities[0] = min(0, self.velocities[0] + 0.1)
         self.pos[0] += ((self.pos[0] + self.velocities[0]) - self.pos[0]) * 0.9
         self.pos[1] += ((self.pos[1] + self.velocities[1]) - self.pos[1]) * 0.9
 
