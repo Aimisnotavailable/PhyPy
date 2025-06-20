@@ -59,15 +59,16 @@ class App(Engine):
 
     def __init__(self, dim=..., font_size=20):
         super().__init__(dim, font_size)
-        self.ball = Ball([100, 10], (20, 20), (10, 10), {"gravity" : Gravity(0.1), "bounce" : Bounce(0.9), "wind_x" : Wind(0.1), "wind_y" : Wind(0.1, "wind_y")})
-        self.sliders : dict[str, Slider] = {"gravity" : {"slider": Slider("gravity", pos=[0, 10]), "switch" : Switch([self.display.get_width() - 20, 10])}, 
-                                            "bounce" : {"slider": Slider("bounce", pos=[0, 40]), "switch" : Switch([self.display.get_width() - 20, 40])}, 
-                                            "wind_x" : {"slider": Slider("wind_x", pos=[0, 70]), "switch" : Switch([self.display.get_width() - 20, 70])}, 
-                                            "wind_y" : {"slider": Slider("wind_y", pos=[0, 100]), "switch" : Switch([self.display.get_width() - 20, 100])}}
+        self.ball = Ball([self.display.get_width()//2, self.display.get_height()//2], (30, 30), (10, 10), {"gravity" : Gravity(0.1), "bounce" : Bounce(0.9), "wind_x" : Wind(0.1), "wind_y" : Wind(0.1, "wind_y")})
+        self.sliders : dict[str, Slider] = {"gravity" : {"slider": Slider("gravity", pos=[0, 30]), "switch" : Switch([self.display.get_width() - 20, 30])}, 
+                                            "bounce" : {"slider": Slider("bounce", pos=[0, 60]), "switch" : Switch([self.display.get_width() - 20, 60])}, 
+                                            "wind_x" : {"slider": Slider("wind_x", pos=[0, 90]), "switch" : Switch([self.display.get_width() - 20, 90])}, 
+                                            "wind_y" : {"slider": Slider("wind_y", pos=[0, 120]), "switch" : Switch([self.display.get_width() - 20, 120])}}
 
-        self.hide_switch = Switch((self.display.get_width() // 2, 0), text="Show")
+        self.hide_switch = Switch((0, 0), text="Show")
         self.clicking = False
         self.hide = False
+        self.interaction = False
 
     def run(self):
 
@@ -88,16 +89,23 @@ class App(Engine):
                 if event.type == pygame.MOUSEBUTTONUP:
                     if event.button == 1:
                         self.clicking = False
+                
             
             mpos = pygame.mouse.get_pos()
             mpos = [mpos[0] / 2, mpos[1] / 2]
 
+            b_rect = self.ball.rect()
+            b_rect.center = self.ball.pos.copy()
+
             if self.hide_switch.rect().collidepoint(mpos) and just_click:
                 self.hide = not self.hide
                 self.hide_switch.flip = not self.hide_switch.flip
+                self.interaction = self.hide
+
             self.hide_switch.update()
             self.hide_switch.render(self.display)
             
+
             if not self.hide:
                 for label, objs in self.sliders.items():
                     slider : Slider = objs['slider']
@@ -107,40 +115,42 @@ class App(Engine):
                             slider.pos[0] = mpos[0]
                         if switch.rect().collidepoint(mpos) and just_click:
                             switch.flip = not switch.flip
-                    self.display.blit(self.font.render(f'{slider.pos[0] / slider.max_val_in_dist}', True, (255, 255, 255)), [0 + (slider.max_val/slider.inc) + 20, slider.pos[1]])
+                    self.display.blit(self.font.render(f'{slider.pos[0] / slider.max_val_in_dist : 0.2f} {label}', True, (255, 255, 255)), [0 + (slider.max_val/slider.inc) + 20, slider.pos[1]])
                     switch.update()
                     switch.render(self.display)
                     slider.render(self.display)
                     self.ball.forces[label].force = (slider.pos[0] / slider.max_val_in_dist) * (-1 if switch.flip else 1)
 
 
-            if self.ball.pos[0] + self.ball.size[0] >= self.display.get_width():
-                self.ball.pos[0] = self.display.get_width() - self.ball.size[0] - 1
+            if self.ball.pos[0] + self.ball.size[0] // 2 >= self.display.get_width():
+                self.ball.pos[0] = self.display.get_width() - self.ball.size[0] // 2 - 1
                 args.add("apply_bounce_x")
-            elif self.ball.pos[0] <= 0:
-                self.ball.pos[0] = 1
+            if self.ball.pos[0] - self.ball.size[0] // 2 <= 0:
+                self.ball.pos[0] = self.ball.size[0] 
                 args.add("apply_bounce_x")
             
-            if (self.ball.pos[1] + self.ball.size[1]) >= self.display.get_height():
-                self.ball.pos[1] = self.display.get_height() - self.ball.size[1] - 1
+            if (self.ball.pos[1] + self.ball.size[1] // 2) >= self.display.get_height():
+                self.ball.pos[1] = self.display.get_height() - self.ball.size[1] // 2 - 1
                 args.add("apply_bounce_y")
-            elif self.ball.pos[1] <= 0:
-                self.ball.pos[1] = 1
+            if self.ball.pos[1] - self.ball.size[1] // 2 <= 0:
+                self.ball.pos[1] = self.ball.size[1] // 2
+                args.add("apply_bounce_y")
+
+            if self.interaction and b_rect.collidepoint(mpos):
+                args.add("apply_bounce_x")
                 args.add("apply_bounce_y")
 
             if self.clicking:
-                if self.ball.rect().collidepoint(mpos):
-                    b_rect = self.ball.rect()
-                    b_rect.center = mpos
-                    self.ball.pos = b_rect[0 : 2]
+                if b_rect.collidepoint(mpos):
+                    self.ball.pos = mpos
                 else:
                     self.ball.update(args=args)
             else:
                 self.ball.update(args=args)
+            
 
-
-            pygame.draw.rect(self.display, (255, 255, 255), self.ball.rect())
-
+            pygame.draw.circle(self.display, (255, 255, 255), self.ball.pos, self.ball.size[0] // 2)
+            pygame.draw.circle(self.display, (255, 0, 0), self.ball.pos, 2)
             
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             self.clock.tick(60)
