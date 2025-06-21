@@ -9,7 +9,7 @@ class Ball(PhysicsObj):
         super().__init__(terminal_velocities)
         self.pos = pos
         self.size = size
-
+        self.collider_cooldown = 0
         for force, force_obj in forces.items():
             self.forces[force] = force_obj
     
@@ -39,6 +39,7 @@ class Ball(PhysicsObj):
         self.pos[0] += ((self.pos[0] + self.velocities[0]) - self.pos[0]) * 0.9
         self.pos[1] += ((self.pos[1] + self.velocities[1]) - self.pos[1]) * 0.9
 
+        self.collider_cooldown = max(0, self.collider_cooldown - 1)
         # if abs(self.velocities[0] <= 0.01):
         #     self.velocities[0] = 0
         # if abs(self.velocities[1] <= 0.01):

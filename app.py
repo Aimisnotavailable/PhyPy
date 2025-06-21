@@ -1,11 +1,17 @@
 import pygame
 import sys
+import math
+
+
 from scripts.engine import Engine
 from scripts.ball import Ball
 from scripts.gravity import  Gravity
 from scripts.bounce import Bounce
 from scripts.wind import Wind
+from scripts.logger import get_logger_info
+from scripts.ar import AR
 
+INDEX_TIP_IDX   = 8
 
 class Slider:
     def __init__(self, s_type="", pos=[0,0], size=[20, 20], inc=0.01, max_val=1):
@@ -68,7 +74,10 @@ class App(Engine):
         self.hide_switch = Switch((0, 0), text="Show")
         self.clicking = False
         self.hide = False
-        self.interaction = False
+
+        self.ar = AR()
+        self.just_clicked = {"LEFT" : False, "RIGHT" : False}
+
 
     def run(self):
 
@@ -100,13 +109,26 @@ class App(Engine):
             if self.hide_switch.rect().collidepoint(mpos) and just_click:
                 self.hide = not self.hide
                 self.hide_switch.flip = not self.hide_switch.flip
-                self.interaction = self.hide
 
             self.hide_switch.update()
             self.hide_switch.render(self.display)
             
+            try:
+                ar_data = self.ar.render(self.display)
+            except:
+                pass
 
             if not self.hide:
+                click_pos = {'LEFT' : None, 'RIGHT' : None}
+                for key in ['LEFT', 'RIGHT']:
+                    if ar_data['CLICK_FLAG'][key]:
+                        pos = ar_data['POSITION_DATA'][key][INDEX_TIP_IDX ]
+                        if b_rect.collidepoint(pos):
+                            self.ball.pos = list(pos).copy()
+                        click_pos[key] = pos
+
+                
+                
                 for label, objs in self.sliders.items():
                     slider : Slider = objs['slider']
                     switch : Switch = objs['switch']
@@ -122,33 +144,42 @@ class App(Engine):
                     self.ball.forces[label].force = (slider.pos[0] / slider.max_val_in_dist) * (-1 if switch.flip else 1)
 
 
-            if self.ball.pos[0] + self.ball.size[0] // 2 >= self.display.get_width():
-                self.ball.pos[0] = self.display.get_width() - self.ball.size[0] // 2 - 1
-                args.add("apply_bounce_x")
-            if self.ball.pos[0] - self.ball.size[0] // 2 <= 0:
-                self.ball.pos[0] = self.ball.size[0] 
-                args.add("apply_bounce_x")
-            
-            if (self.ball.pos[1] + self.ball.size[1] // 2) >= self.display.get_height():
-                self.ball.pos[1] = self.display.get_height() - self.ball.size[1] // 2 - 1
-                args.add("apply_bounce_y")
-            if self.ball.pos[1] - self.ball.size[1] // 2 <= 0:
-                self.ball.pos[1] = self.ball.size[1] // 2
-                args.add("apply_bounce_y")
 
-            if self.interaction and b_rect.collidepoint(mpos):
-                args.add("apply_bounce_x")
-                args.add("apply_bounce_y")
-
-            if self.clicking:
-                if b_rect.collidepoint(mpos):
-                    self.ball.pos = mpos
-                else:
-                    self.ball.update(args=args)
             else:
+                
+                for key in ['LEFT', 'RIGHT']:
+                    collided = False
+                    for point in ar_data['POSITION_DATA'][key]:
+                        if not self.ball.collider_cooldown:
+                            if b_rect.collidepoint(point):
+                                self.ball.velocities[0] = 10 * (1 if self.ball.velocities[0] < 0 else -1)
+                                self.ball.velocities[1] = 10 * (1 if self.ball.velocities[1] < 0 else -1)
+                                self.ball.collider_cooldown = 5
+                                collided = True
+                                break
+                        else:
+                            collided = True
+                            break
+                    if collided:
+                        break
+                            
+
+                if self.ball.pos[0] + self.ball.size[0] // 2 >= self.display.get_width():
+                    self.ball.pos[0] = self.display.get_width() - self.ball.size[0] // 2 - 1
+                    args.add("apply_bounce_x")
+                if self.ball.pos[0] - self.ball.size[0] // 2 <= 0:
+                    self.ball.pos[0] = self.ball.size[0] 
+                    args.add("apply_bounce_x")
+                
+                if (self.ball.pos[1] + self.ball.size[1] // 2) >= self.display.get_height():
+                    self.ball.pos[1] = self.display.get_height() - self.ball.size[1] // 2 - 1
+                    args.add("apply_bounce_y")
+                if self.ball.pos[1] - self.ball.size[1] // 2 <= 0:
+                    self.ball.pos[1] = self.ball.size[1] // 2
+                    args.add("apply_bounce_y")
+
                 self.ball.update(args=args)
             
-
             pygame.draw.circle(self.display, (255, 255, 255), self.ball.pos, self.ball.size[0] // 2)
             pygame.draw.circle(self.display, (255, 0, 0), self.ball.pos, 2)
             
