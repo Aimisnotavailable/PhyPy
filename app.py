@@ -65,6 +65,7 @@ class App(Engine):
 
     def __init__(self, dim=..., font_size=20):
         super().__init__(dim, font_size)
+        pygame.display.set_caption('AIM')
         self.ball = Ball([self.display.get_width()//2, self.display.get_height()//2], (30, 30), (10, 10), {"gravity" : Gravity(0.1), "bounce" : Bounce(0.9), "wind_x" : Wind(0.1), "wind_y" : Wind(0.1, "wind_y")})
         self.sliders : dict[str, Slider] = {"gravity" : {"slider": Slider("gravity", pos=[0, 30]), "switch" : Switch([self.display.get_width() - 20, 30])}, 
                                             "bounce" : {"slider": Slider("bounce", pos=[0, 60]), "switch" : Switch([self.display.get_width() - 20, 60])}, 
