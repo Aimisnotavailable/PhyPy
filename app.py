@@ -14,7 +14,7 @@ from scripts.ar import AR
 INDEX_TIP_IDX   = 8
 
 class Slider:
-    def __init__(self, s_type="", pos=[0,0], size=[20, 20], inc=0.01, max_val=1):
+    def __init__(self, s_type="", pos=[0,0], size=[10, 10], inc=0.01, max_val=1):
         self.type = s_type
         self.start_pos = [0, pos[1]]
         self.pos = pos
@@ -24,7 +24,8 @@ class Slider:
         self.max_val_in_dist = self.max_val/self.inc
 
         self.surf = pygame.Surface((size))
-        self.surf.fill((255, 255, 255))
+        self.surf.fill((0, 0, 0, 0))
+        pygame.draw.circle(self.surf, (255, 255, 255), [self.size[0] // 2, self.size[0] // 2], self.size[0] // 2)
 
     def rect(self):
         return pygame.Rect(*self.pos, *self.size)
@@ -143,8 +144,6 @@ class App(Engine):
                     slider.render(self.display)
                     self.ball.forces[label].force = (slider.pos[0] / slider.max_val_in_dist) * (-1 if switch.flip else 1)
 
-
-
             else:
                 
                 for key in ['LEFT', 'RIGHT']:
@@ -187,4 +186,4 @@ class App(Engine):
             self.clock.tick(60)
             pygame.display.update()
 
-App((1000, 800)).run()
+App((900, 1000)).run()  
