@@ -14,6 +14,12 @@ Make sure you have Python 3.11 installed, then run:
 pip install -r requirements.txt
 ```
 
+Adjust window size to your liking @ app.py
+```python
+#(width, height)
+App((900, 1000)).run()
+```
+
 ---
 
 ## Project Background
