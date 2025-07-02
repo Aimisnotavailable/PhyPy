@@ -66,7 +66,7 @@ Many educational settings lack affordable, hands-on tools to vividly demonstrate
 3. Launch the simulation:
 
     ```bash
-    python3.11 main.py
+    python3.11 app.py
     ```
 
 4. Use hand gestures to interact with the on-screen ball and observe how various forces affect its motion.
