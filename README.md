@@ -1,6 +1,6 @@
 # PhyPy
 
-# AIM (Augmented Integration for Modern Learning)
+# AIM (Augmented Reality Integration for Modern Learning)
 
 AIM transforms any laptop or webcam-equipped device into an interactive portal for dynamic physics lessons. By capturing hand gestures through a standard webcam, AIM drives a 2D physics simulation on screen—illustrating gravity, elasticity, and directional wind forces in real time. Delivered as a free, software-only solution, AIM removes reliance on specialized AR hardware, broadening access to immersive STEM education.
 
