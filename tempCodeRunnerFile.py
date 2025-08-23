@@ -1,2 +1,2 @@
 
-            
+                print(ar_data)

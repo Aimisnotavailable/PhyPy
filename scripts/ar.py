@@ -165,6 +165,7 @@ class AR:
             "SCALE":         {"LEFT": 1,    "RIGHT": 1},
             "CLICK_DIST":    {"LEFT": 0,    "RIGHT": 0},
             "CLICK_FLAG":    {"LEFT": False,"RIGHT": False},
+            "HAND_PRESENCE" : False
         }
 
         ret, frame = self.cap.read()
@@ -196,6 +197,7 @@ class AR:
                 ar_data["SCALE"][label]         = d["scale"]
                 ar_data["CLICK_DIST"][label]    = d["rel_dist"]
                 ar_data["CLICK_FLAG"][label]    = d["is_pinched"]
+                ar_data["HAND_PRESENCE"]        = True
 
                 self.hands_tracker[label] = 0
 
@@ -212,12 +214,17 @@ class AR:
                             f'GENERATED HAND FRAMES FOR {label}', True)
 
         else:
+
             get_logger_info('ERROR', 'NO HANDS DETECTED', True)
             # same ghost-frame logic if you like
             for label in ("LEFT","RIGHT"):
-                if len(self.position_histogram[label]) >= 2:
+                if (len(self.position_histogram[label]) >= 2
+                       and self.hands_tracker[label] < HISTOGRAM_SIZE):
                     vel = self.calculate_velocity(label, dir=1)
                     ghost = self.generate_frames(vel, label)
                     self.render_hands(surf, ghost, label)
+                else:
+                    ar_data["HAND_PRESENCE"] = False
+                    # no hands detected at all
 
         return ar_data

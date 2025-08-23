@@ -61,6 +61,22 @@ class Switch:
     def render(self, surf):
         surf.blit(self.surf, self.pos)
 
+class Popup:
+    def __init__(self, text="", pos=[0,0]):
+        self.text = text
+        self.pos = pos
+        self.font_surf = pygame.font.Font(size=15).render(self.text, True, (255, 255, 255))
+        self.size = self.font_surf.get_size()
+        self.surf = pygame.Surface((self.size))
+        self.surf_rect = self.surf.get_rect(center=self.pos)
+        self.surf.fill((0, 0, 0))
+        self.surf.blit(self.font_surf, (0, 0))
+        
+        pygame.font.init()
+    
+    def render(self, surf):
+        surf.blit(self.surf, self.surf_rect)
+
 class App(Engine):
 
 
@@ -74,6 +90,7 @@ class App(Engine):
                                             "wind_y" : {"slider": Slider("wind_y", pos=[0, 120]), "switch" : Switch([self.display.get_width() - 20, 120])}}
 
         self.hide_switch = Switch((0, 0), text="Show")
+        self.popup = Popup("No Hands Detected, Show your hands to the camera", (self.display.get_width()//2 , self.display.get_height()//2))
         self.clicking = False
         self.hide = False
 
@@ -119,6 +136,10 @@ class App(Engine):
                 ar_data = self.ar.render(self.display)
             except:
                 pass
+            
+            if not ar_data["HAND_PRESENCE"]:
+                self.popup.render(self.display)
+                print("No hands detected")
 
             if not self.hide:
                 click_pos = {'LEFT' : None, 'RIGHT' : None}
@@ -144,7 +165,6 @@ class App(Engine):
                     switch.render(self.display)
                     slider.render(self.display)
                     self.ball.forces[label].force = (slider.pos[0] / slider.max_val_in_dist) * (-1 if switch.flip else 1)
-
             else:
                 
                 for key in ['LEFT', 'RIGHT']:
