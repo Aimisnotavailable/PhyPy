@@ -62,20 +62,23 @@ class Switch:
         surf.blit(self.surf, self.pos)
 
 class Popup:
-    def __init__(self, text="", pos=[0,0]):
+    def __init__(self, text="", pos=[0,0], color=(0,0,0), rotation=0):
         self.text = text
         self.pos = pos
-        self.font_surf = pygame.font.Font(size=15).render(self.text, True, (255, 255, 255))
+        self.font_surf = pygame.font.Font(size=15).render(self.text, True, color=color)
         self.size = self.font_surf.get_size()
         self.surf = pygame.Surface((self.size))
         self.surf_rect = self.surf.get_rect(center=self.pos)
         self.surf.fill((0, 0, 0))
         self.surf.blit(self.font_surf, (0, 0))
+        self.rotation = rotation
         
         pygame.font.init()
     
     def render(self, surf):
-        surf.blit(self.surf, self.surf_rect)
+        img = pygame.transform.rotate(self.surf, self.rotation)
+        img_rect = img.get_rect(center=(self.pos[0] + math.cos(self.rotation) * 10, self.pos[1] + math.sin(self.rotation) * 10))
+        surf.blit(img, img_rect)
 
 class App(Engine):
 
@@ -90,7 +93,14 @@ class App(Engine):
                                             "wind_y" : {"slider": Slider("wind_y", pos=[0, 120]), "switch" : Switch([self.display.get_width() - 20, 120])}}
 
         self.hide_switch = Switch((0, 0), text="Show")
-        self.popup = Popup("No Hands Detected, Show your hands to the camera", (self.display.get_width()//2 , self.display.get_height()//2))
+        self.popup = Popup("No Hands Detected, Show your hands to the camera", (self.display.get_width()//2 , self.display.get_height()//2), (255, 0, 0))
+        self.popup_inverse = Popup("INVERT FORCES", (418, 73), (0, 255, 0), 90)
+
+        self.popup_simulation_mode = Popup("SIMULATION MODE", (self.display.get_width()//2 , 20), (0, 255, 0), 0)
+        self.popup_setup_mode = Popup("SETUP MODE", (self.display.get_width()//2 , 20), (0, 255, 0), 0)
+        self.popup_start = Popup("START", (30, 10), (0, 255, 0), 0)
+        self.popup_stop = Popup("STOP", (30, 10), (255, 0, 0), 0)
+
         self.clicking = False
         self.hide = False
 
@@ -137,11 +147,8 @@ class App(Engine):
             except:
                 pass
             
-            if not ar_data["HAND_PRESENCE"]:
-                self.popup.render(self.display)
-                print("No hands detected")
-
             if not self.hide:
+                self.popup_start.render(self.display)
                 click_pos = {'LEFT' : None, 'RIGHT' : None}
                 for key in ['LEFT', 'RIGHT']:
                     if ar_data['CLICK_FLAG'][key]:
@@ -165,8 +172,13 @@ class App(Engine):
                     switch.render(self.display)
                     slider.render(self.display)
                     self.ball.forces[label].force = (slider.pos[0] / slider.max_val_in_dist) * (-1 if switch.flip else 1)
+                    self.popup_inverse.render(self.display)
+
+                    self.popup_setup_mode.render(self.display)
             else:
-                
+                self.popup_stop.render(self.display)
+                self.popup_simulation_mode.render(self.display)
+                    
                 for key in ['LEFT', 'RIGHT']:
                     collided = False
                     for point in ar_data['POSITION_DATA'][key]:
@@ -202,7 +214,13 @@ class App(Engine):
             
             pygame.draw.circle(self.display, (255, 255, 255), self.ball.pos, self.ball.size[0] // 2)
             pygame.draw.circle(self.display, (255, 0, 0), self.ball.pos, 2)
+
+            if not ar_data["HAND_PRESENCE"]:
+                self.popup.render(self.display)
+                print("No hands detected")
             
+            print(mpos)
+
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             self.clock.tick(60)
             pygame.display.update()
