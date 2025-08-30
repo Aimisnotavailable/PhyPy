@@ -1,6 +1,7 @@
 import pygame
 import sys
 import math
+import os
 
 
 from scripts.engine import Engine
@@ -79,6 +80,8 @@ class App(Engine):
 
         self.ar = AR()
         self.just_clicked = {"LEFT" : False, "RIGHT" : False}
+        self.bg = pygame.image.load(f'{os.getcwd()}/data/images/background.png')
+        self.apple = pygame.transform.scale(pygame.image.load(f'{os.getcwd()}/data/images/apple.png'), self.ball.size)
 
 
     def run(self):
@@ -86,6 +89,7 @@ class App(Engine):
         while True:
             args : set[str] = set()
             self.display.fill((0, 0, 0))
+            self.display.blit(pygame.transform.scale(self.bg, self.display.get_size()), (0, 0))
             just_click = False
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -180,8 +184,8 @@ class App(Engine):
 
                 self.ball.update(args=args)
             
-            pygame.draw.circle(self.display, (255, 255, 255), self.ball.pos, self.ball.size[0] // 2)
-            pygame.draw.circle(self.display, (255, 0, 0), self.ball.pos, 2)
+            c_rect = self.apple.get_rect(center=self.ball.pos)
+            self.display.blit(self.apple, c_rect)
             
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             self.clock.tick(60)

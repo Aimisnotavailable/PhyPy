@@ -112,7 +112,7 @@ class AR:
             x_px = -lm.x * W + W
             y_px =  lm.y * H
             pts.append((x_px, y_px))
-            pygame.draw.circle(surf, (255,255,255), (int(x_px),int(y_px)), 2)
+            pygame.draw.circle(surf, (0,0,0), (int(x_px),int(y_px)), 2)
 
         # maintain sliding window
         hist = self.position_histogram[label]
@@ -124,7 +124,7 @@ class AR:
 
         # draw connections
         for c in self.mp_hands.HAND_CONNECTIONS:
-            pygame.draw.line(surf, (0,0,255),
+            pygame.draw.line(surf, (150,75,0),
                              pts[c[0]], pts[c[1]], 1)
 
     def calculate_velocity(self, label, dir=0):
